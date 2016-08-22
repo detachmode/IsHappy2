@@ -1,55 +1,77 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Runtime.Remoting.Metadata.W3cXsd2001;
+using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace IsHappy
 {
-    static class HappyNumbers
+    public static class HappyNumbers
     {
-        public static bool IsHappyNumber(int number)
+
+
+        public static void IsHappyNumber(int number)
         {
+            CheckIsHappyUnhappy(number);
+        }
 
-            bool isHappy = check_is_One(number);
-            if (isHappy)
-            {
-                return true;
-            }
-
-            List<int> nums = splitt_Digits(number);
-            nums = square(nums);
-            int sum = sumNums(nums);
-            bool check = check_for_termination(sum);
-            if (!check)
-            {
-                
-            }
-            return false;
+        public static void ResultFound(bool result)
+        {
+            OnCheckDone(result);
         }
 
 
+        public static event Action<bool> OnCheckDone;
 
-        public static int[] splitt_Digits(int value)
+        public static void CheckIsHappyUnhappy(int number)
         {
-            int size = DetermineDigitCount(value);
-            int[] digits = new int[size];
-            for (int index = size - 1; index >= 0; index--)
+            IF_Is_HappyNumber(number, 
+                ResultFound, 
+                CreateNextNumber);
+        }
+
+        private static void CreateNextNumber(int number)
+        {
+            Debug.WriteLine(number.ToString());
+            IEnumerable<int> digits = SplitDigits(number).ToList();
+            digits = digits.Select(x => (int) Math.Pow(x, 2));
+            int sum = digits.Sum();
+
+            CheckIsHappyUnhappy(sum);
+        }
+
+        private static void IF_Is_HappyNumber(int number, Action<bool> ResultFound, Action<int> checkNumber)
+        {
+            switch (number)
             {
-                digits[index] = value % 10;
-                value = value / 10;
+                case 1:
+                    ResultFound(true);
+                    return;
+                case 4:
+                    ResultFound(false);
+                    return;
+                default:
+                    checkNumber(number);
+                    return;
             }
-            return digits;
         }
 
-        private static bool check_is_One(int number)
+        public static IEnumerable<int> SplitDigits(int number)
         {
-            return number == 1 ? true : false;
-
+            var chars = number.ToString().ToCharArray();
+            foreach (var c in chars)
+            {
+                yield return int.Parse(c.ToString());
+            }
         }
+
     }
 
 
